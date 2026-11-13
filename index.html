@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080713">
-<title>bubu e dudu entre as estrelas do bem</title>
+<title>bubu & dudu — entre as estrelas</title>
 <style>
 /* =========================================================
    ABUUB & DUDU — FULLSCREEN MEMORY FLIGHT
@@ -862,9 +862,42 @@ button {
 
 /* ---------- 15. Mobile tuning ---------- */
 @media (max-width: 420px) {
+  #universe {
+    perspective: none;
+  }
+
+  #flight-plane,
+  #memory-field {
+    transform: none !important;
+    transform-style: flat;
+    perspective: none;
+  }
+
   .memory-object {
     width: var(--mobile-width, 112px);
     height: var(--mobile-height, 148px);
+    transform-style: flat;
+    animation: none !important;
+    -webkit-backface-visibility: visible;
+    backface-visibility: visible;
+    contain: layout paint;
+  }
+
+  .memory-frame {
+    transform: none !important;
+    filter: none !important;
+    background: #fffaff;
+    box-shadow: 0 12px 30px rgba(0,0,0,.45);
+  }
+
+  .memory-frame img {
+    opacity: 1 !important;
+    visibility: visible !important;
+    filter: none;
+  }
+
+  .memory-glow {
+    display: none;
   }
 
   .hud-top {
@@ -875,6 +908,38 @@ button {
 
   #controls {
     right: 12px;
+  }
+
+  #photo-viewer {
+    padding-left: 14px;
+    padding-right: 14px;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  #photo-viewer.open {
+    background: rgba(5, 4, 13, .97);
+  }
+
+  .viewer-card {
+    width: min(78vw, 340px);
+    transform: none;
+    transition: none;
+  }
+
+  .viewer-card.changing {
+    transform: none;
+  }
+
+  #viewer-image {
+    max-height: 48vh;
+    min-height: 150px;
+    animation: none !important;
+  }
+
+  .photo-shine,
+  .viewer-stars {
+    display: none;
   }
 }
 
@@ -936,7 +1001,7 @@ button {
 
   <div id="hud">
     <div class="hud-top">
-      <span>bubu <span class="hud-mark">♡</span> dudu</span>
+      <span>abuub <span class="hud-mark">♡</span> dudu</span>
       <span>nosso universo particular</span>
     </div>
     <div class="hud-bottom">
@@ -1000,19 +1065,7 @@ const starterPhotos = [
   "fotos/foto-03.jpg",
   "fotos/foto-04.jpg",
   "fotos/foto-05.jpg",
-  "fotos/foto-06.jpg",
-  "fotos/1.jpeg",
-  "fotos/4.jpeg",
-  "fotos/23.jpeg",
-  "fotos/55.jpeg",
-  "fotos/555.jpeg",
-  "fotos/524242.jpeg",
-  "fotos/dfd.jpeg",
-  "fotos/e.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.01.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.02 copy.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.023 copy.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.023.jpeg"
+  "fotos/foto-06.jpg"
 ];
 
 /* =========================================================
@@ -1206,6 +1259,10 @@ function createMemoryObject(src, index, total) {
   frame.className = "memory-frame";
   image.src = src;
   image.alt = `Foto ${index + 1} de vocês`;
+  image.addEventListener("error", () => {
+    object.classList.add("photo-missing");
+    image.alt = "Foto não encontrada — confira o arquivo na pasta fotos";
+  }, { once: true });
   image.draggable = false;
   caption.className = "frame-caption";
   caption.textContent = "♡";
@@ -1260,11 +1317,18 @@ function positionMemories() {
     const y = layout.y * spread;
     const z = layout.z;
 
-    item.element.style.transform =
-      `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) ` +
-      `rotateZ(${layout.rotate}deg)`;
-
-    item.element.style.zIndex = String(Math.round(z + 500));
+    if (isSmallScreen()) {
+      // Mobile: keep cards on a flat 2D plane. This avoids GPU layer
+      // flicker/gray overlays seen on some Android browsers.
+      item.element.style.transform =
+        `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${layout.rotate * 0.55}deg)`;
+      item.element.style.zIndex = String(20 + index);
+    } else {
+      item.element.style.transform =
+        `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) ` +
+        `rotateZ(${layout.rotate}deg)`;
+      item.element.style.zIndex = String(Math.round(z + 500));
+    }
   });
 }
 
@@ -1517,9 +1581,14 @@ function updateCamera(delta) {
   const tiltX = rotationX * 32;
   const tiltY = rotationY * 32;
 
-  flightPlane.style.transform =
-    `translate3d(${tiltY}px, ${tiltX}px, 0) ` +
-    `rotateX(${rotationX}rad) rotateY(${rotationY}rad)`;
+  if (isSmallScreen()) {
+    // Keep the photo plane still on phones; only the stars get gentle parallax.
+    flightPlane.style.transform = "none";
+  } else {
+    flightPlane.style.transform =
+      `translate3d(${tiltY}px, ${tiltX}px, 0) ` +
+      `rotateX(${rotationX}rad) rotateY(${rotationY}rad)`;
+  }
 }
 
 /* =========================================================
@@ -1534,9 +1603,14 @@ function updateMemoryDrift(time) {
     const x = layout.x + wave * 8;
     const y = layout.y + waveY * 11;
 
-    item.element.style.transform =
-      `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${layout.z}px) ` +
-      `rotateZ(${layout.rotate + wave * 1.3}deg)`;
+    if (isSmallScreen()) {
+      item.element.style.transform =
+        `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${(layout.rotate + wave) * 0.55}deg)`;
+    } else {
+      item.element.style.transform =
+        `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${layout.z}px) ` +
+        `rotateZ(${layout.rotate + wave * 1.3}deg)`;
+    }
   });
 }
 
