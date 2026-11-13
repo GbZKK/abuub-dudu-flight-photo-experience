@@ -48,7 +48,7 @@ body {
   font-family: Georgia, "Times New Roman", serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 button,
@@ -863,17 +863,20 @@ button {
 /* ---------- 15. Mobile tuning ---------- */
 @media (max-width: 420px) {
   #universe {
-    perspective: 900px;
+    perspective: 780px;
     touch-action: none;
   }
 
-  /* Keep the mobile scene transformable: the previous !important rule
-     cancelled every transform written by the animation and drag code. */
+  /* A câmera gira o cenário inteiro; as fotos continuam nos mesmos
+     pontos do espaço e mantêm a flutuação individual. */
   #flight-plane,
   #memory-field {
     transform-style: preserve-3d;
-    perspective: 900px;
     will-change: transform;
+  }
+
+  #flight-plane {
+    transform-origin: 50% 50%;
   }
 
   .memory-object {
@@ -1068,19 +1071,7 @@ const starterPhotos = [
   "fotos/foto-03.jpg",
   "fotos/foto-04.jpg",
   "fotos/foto-05.jpg",
-  "fotos/foto-06.jpg",
-  "fotos/1.jpeg",
-  "fotos/4.jpeg",
-  "fotos/23.jpeg",
-  "fotos/55.jpeg",
-  "fotos/555.jpeg",
-  "fotos/524242.jpeg",
-  "fotos/dfd.jpeg",
-  "fotos/e.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.01.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.02 copy.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.023 copy.jpeg",
-  "fotos/WhatsApp Image 2026-11-12 at 22.19.023.jpeg"
+  "fotos/foto-06.jpg"
 ];
 
 /* =========================================================
@@ -1228,35 +1219,18 @@ function createDecorations() {
    ========================================================= */
 function getObjectLayout(index, total) {
   const angle = (Math.PI * 2 * index) / Math.max(total, 1);
-  const mobile = isSmallScreen();
-
-  if (mobile) {
-    // Fotos distribuídas em um anel 3D: ao girar a câmera, você vê
-    // as lembranças surgindo dos lados e passando ao seu redor.
-    const radius = Math.min(Math.max(window.innerWidth * 0.78, 285), 390);
-    const orbitAngle = angle + random(-0.055, 0.055);
-    return {
-      x: Math.sin(orbitAngle) * radius,
-      y: Math.sin(orbitAngle * 2.1) * 76 + random(-18, 18),
-      z: Math.cos(orbitAngle) * radius,
-      orbitAngle,
-      rotate: random(-5, 5),
-      width: random(108, 128),
-      height: random(142, 168),
-      speed: random(0.55, 1.05),
-      phase: random(0, Math.PI * 2)
-    };
-  }
-
-  const spread = 1.18;
+  const spread = isSmallScreen() ? 1 : 1.18;
   const radiusX = Math.min(window.innerWidth * 0.43, 190) * spread;
   const radiusY = Math.min(window.innerHeight * 0.36, 280);
   const depth = random(-240, 230);
+
   const x = Math.cos(angle) * radiusX + random(-40, 40);
   const y = Math.sin(angle) * radiusY + random(-70, 70);
 
   return {
-    x, y, z: depth,
+    x,
+    y,
+    z: depth,
     rotate: random(-13, 13),
     width: random(112, 145),
     height: random(148, 190),
@@ -1349,17 +1323,10 @@ function positionMemories() {
     const y = layout.y * spread;
     const z = layout.z;
 
-    if (isSmallScreen()) {
-      item.element.style.transform =
-        `translate3d(calc(-50% + ${layout.x}px), calc(-50% + ${layout.y}px), ${layout.z}px) ` +
-        `rotateY(${layout.orbitAngle}rad) rotateZ(${layout.rotate}deg)`;
-      item.element.style.zIndex = String(Math.round(layout.z + 500));
-    } else {
-      item.element.style.transform =
-        `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) ` +
-        `rotateZ(${layout.rotate}deg)`;
-      item.element.style.zIndex = String(Math.round(z + 500));
-    }
+    item.element.style.transform =
+      `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) ` +
+      `rotateZ(${layout.rotate}deg)`;
+    item.element.style.zIndex = String(Math.round(z + 500));
   });
 }
 
@@ -1575,11 +1542,7 @@ function beginFlightGesture(event) {
   targetRotationY = rotationY;
   targetRotationX = rotationX;
 
-  try {
-    event.currentTarget.setPointerCapture(event.pointerId);
-  } catch (_) {
-    // Pointer capture may be unavailable in older mobile browsers.
-  }
+  universe.setPointerCapture?.(event.pointerId);
 }
 
 function moveFlightGesture(event) {
@@ -1590,10 +1553,11 @@ function moveFlightGesture(event) {
   const deltaX = event.clientX - pointerStartX;
   const deltaY = event.clientY - pointerStartY;
 
-  targetRotationY += deltaX * 0.0035;
-  targetRotationX -= deltaY * 0.0025;
+  targetRotationY -= deltaX * 0.0052;
+  targetRotationX += deltaY * 0.0042;
 
-  targetRotationX = clamp(targetRotationX, -0.42, 0.42);
+  // Horizontal view can turn all the way around; vertical look is limited.
+  targetRotationX = clamp(targetRotationX, -0.62, 0.62);
 
   pointerStartX = event.clientX;
   pointerStartY = event.clientY;
@@ -1613,19 +1577,14 @@ function updateCamera(delta) {
   rotationX += (targetRotationX - rotationX) * easing;
   rotationY += (targetRotationY - rotationY) * easing;
 
-  const tiltX = rotationX * 32;
-  const tiltY = rotationY * 32;
+  const tiltX = rotationX * 24;
+  const tiltY = rotationY * 24;
 
-  if (isSmallScreen()) {
-    // Orbit the whole photo ring around the viewer on mobile.
-    flightPlane.style.transform =
-      `translate3d(${tiltY * 0.25}px, ${tiltX * 0.25}px, 0) ` +
-      `rotateX(${rotationX}rad) rotateY(${rotationY}rad)`;
-  } else {
-    flightPlane.style.transform =
-      `translate3d(${tiltY}px, ${tiltX}px, 0) ` +
-      `rotateX(${rotationX}rad) rotateY(${rotationY}rad)`;
-  }
+  // A câmera olha ao redor: o mundo é renderizado no sentido inverso
+  // ao movimento do dedo. As fotos não orbitam umas às outras.
+  flightPlane.style.transform =
+    `translate3d(${tiltY}px, ${tiltX}px, 0) ` +
+    `rotateX(${-rotationX}rad) rotateY(${-rotationY}rad)`;
 }
 
 /* =========================================================
@@ -1640,15 +1599,9 @@ function updateMemoryDrift(time) {
     const x = layout.x + wave * 8;
     const y = layout.y + waveY * 11;
 
-    if (isSmallScreen()) {
-      item.element.style.transform =
-        `translate3d(calc(-50% + ${layout.x + wave * 5}px), calc(-50% + ${layout.y + waveY * 7}px), ${layout.z + Math.sin(time * 0.0003 + layout.phase) * 9}px) ` +
-        `rotateY(${layout.orbitAngle}rad) rotateZ(${layout.rotate + wave * 0.7}deg)`;
-    } else {
-      item.element.style.transform =
-        `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${layout.z}px) ` +
-        `rotateZ(${layout.rotate + wave * 1.3}deg)`;
-    }
+    item.element.style.transform =
+      `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${layout.z}px) ` +
+      `rotateZ(${layout.rotate + wave * 1.3}deg)`;
   });
 }
 
@@ -1682,9 +1635,7 @@ function animate(timestamp) {
 
   if (!isPaused && isFlying) {
     if (!isDragging) {
-      // A câmera passeia lentamente ao redor do anel mesmo sem tocar.
-      targetRotationY += delta * (isSmallScreen() ? 0.000035 : 0.000012);
-      targetRotationX = Math.sin(timestamp * 0.00012) * (isSmallScreen() ? 0.045 : 0.025);
+      targetRotationY += delta * 0.000004;
       targetDriftX = Math.sin(timestamp * 0.00013) * 5;
       targetDriftY = Math.cos(timestamp * 0.00011) * 7;
     }
@@ -1756,13 +1707,7 @@ function toggleAddPanel() {
 /* =========================================================
    27. Event bindings
    ========================================================= */
-const startButton = document.getElementById("start-flight");
-startButton.addEventListener("click", startFlight);
-// Pointer activation is reliable on Android Chrome and avoids a touch-only
-// handler firing twice alongside the normal click event.
-startButton.addEventListener("pointerup", (event) => {
-  if (event.pointerType === "touch") startFlight();
-});
+document.getElementById("start-flight").addEventListener("click", startFlight);
 
 document.getElementById("recenter").addEventListener("click", recenterUniverse);
 
@@ -1828,8 +1773,6 @@ universe.addEventListener("pointerdown", beginFlightGesture);
 universe.addEventListener("pointermove", moveFlightGesture);
 universe.addEventListener("pointerup", endFlightGesture);
 universe.addEventListener("pointercancel", endFlightGesture);
-universe.addEventListener("lostpointercapture", endFlightGesture);
-universe.addEventListener("contextmenu", (event) => event.preventDefault());
 window.addEventListener("resize", refreshLayout);
 
 /* =========================================================
