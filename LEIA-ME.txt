@@ -1,0 +1,21 @@
+ABUUB & DUDU — FULLSCREEN MEMORY FLIGHT (com visualizador de lembranças)
+
+NOVO AO TOCAR NAS FOTOS:
+- Abre uma experiência cinematográfica em tela cheia.
+- Foto ampliada com animação de entrada e brilho.
+- Mensagem romântica para cada lembrança.
+- Navegação anterior/próxima e gesto de deslizar.
+- Botão para guardar a foto nos favoritos durante a sessão.
+- Botão de surpresa que troca a mensagem e solta partículas de corações.
+- Contador de fotos.
+
+PUBLICAR:
+1. Extraia o ZIP.
+2. Substitua os arquivos do projeto no GitHub.
+3. Mantenha index.html e a pasta fotos no mesmo nível.
+4. Envie as alterações; o Vercel publica automaticamente.
+
+FOTOS:
+O botão + adiciona fotos no armazenamento local do navegador/aparelho.
+Para fotos compartilhadas com todos os visitantes, adicione arquivos à pasta fotos,
+inclua seus caminhos no array starterPhotos e faça novo deploy.

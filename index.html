@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080713">
+<title>bubu e dudu entre as estrelas do bem</title>
+<style>
+/* =========================================================
+   ABUUB & DUDU — FULLSCREEN MEMORY FLIGHT
+   Mobile-first immersive floating photo universe
+   ========================================================= */
+
+/* ---------- 01. Design tokens ---------- */
+:root {
+  color-scheme: dark;
+  --night: #080713;
+  --night-soft: #100d20;
+  --violet: #a88bdf;
+  --violet-light: #d9c4ff;
+  --rose: #f1b5df;
+  --rose-light: #ffe2f5;
+  --text: #fff5fd;
+  --muted: #c2b2d1;
+  --glass: rgba(22, 15, 37, .48);
+  --glass-border: rgba(255, 229, 255, .18);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ---------- 02. Reset ---------- */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--night);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  overflow: hidden;
+  color: var(--text);
+  background: var(--night);
+  font-family: Georgia, "Times New Roman", serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  touch-action: pan-y;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- 03. Atmospheric background ---------- */
+#universe {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  perspective: 900px;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(99, 62, 132, .34), transparent 48%),
+    radial-gradient(ellipse at 15% 80%, rgba(79, 53, 119, .2), transparent 45%),
+    linear-gradient(180deg, #080713 0%, #100c20 52%, #090713 100%);
+}
+
+#universe::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: -5;
+  opacity: .65;
+  background:
+    radial-gradient(ellipse at 30% 35%, rgba(191, 133, 213, .18), transparent 26%),
+    radial-gradient(ellipse at 74% 62%, rgba(109, 103, 197, .16), transparent 30%),
+    radial-gradient(ellipse at 50% 90%, rgba(231, 151, 207, .1), transparent 24%);
+  filter: blur(34px);
+  animation: nebula-drift 32s ease-in-out infinite alternate;
+}
+
+#universe::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(4, 3, 12, .28), transparent 18%, transparent 82%, rgba(4, 3, 12, .28)),
+    radial-gradient(ellipse at center, transparent 38%, rgba(3, 2, 10, .48) 100%);
+}
+
+@keyframes nebula-drift {
+  from {
+    transform: translate3d(-2%, 1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(3%, -2%, 0) scale(1.12);
+  }
+}
+
+/* ---------- 04. Star layers ---------- */
+.star-layer {
+  position: absolute;
+  inset: -30%;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.star {
+  position: absolute;
+  display: block;
+  width: var(--size, 2px);
+  height: var(--size, 2px);
+  left: var(--x);
+  top: var(--y);
+  border-radius: 50%;
+  background: #fff;
+  opacity: var(--opacity, .65);
+  box-shadow: 0 0 8px rgba(255, 233, 255, .8);
+  animation: twinkle var(--duration, 4s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+
+.star.large {
+  box-shadow:
+    0 0 4px #fff,
+    0 0 12px rgba(244, 202, 255, .9),
+    0 0 25px rgba(185, 145, 255, .45);
+}
+
+@keyframes twinkle {
+  from {
+    opacity: .2;
+    transform: scale(.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.28);
+  }
+}
+
+/* ---------- 05. Depth plane ---------- */
+#flight-plane {
+  position: absolute;
+  inset: -18%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform .18s ease-out;
+}
+
+.depth-haze {
+  position: absolute;
+  width: 70vw;
+  height: 70vw;
+  max-width: 620px;
+  max-height: 620px;
+  border-radius: 50%;
+  filter: blur(55px);
+  opacity: .17;
+  pointer-events: none;
+}
+
+.haze-one {
+  top: 8%;
+  left: -15%;
+  background: #9b6bc1;
+}
+
+.haze-two {
+  right: -20%;
+  bottom: 0;
+  background: #6b70b9;
+}
+
+/* ---------- 06. Floating dust ---------- */
+.dust-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dust {
+  position: absolute;
+  left: var(--left);
+  bottom: -20px;
+  width: var(--diameter);
+  height: var(--diameter);
+  border-radius: 50%;
+  background: rgba(255, 221, 248, .8);
+  box-shadow: 0 0 14px rgba(246, 185, 232, .65);
+  opacity: 0;
+  animation: dust-rise var(--time) linear infinite;
+  animation-delay: var(--wait);
+}
+
+@keyframes dust-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(.5);
+    opacity: 0;
+  }
+  12% {
+    opacity: .75;
+  }
+  82% {
+    opacity: .5;
+  }
+  100% {
+    transform: translate3d(var(--drift), -115vh, 0) scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* ---------- 07. Photo objects ---------- */
+#memory-field {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.memory-object {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--width);
+  height: var(--height);
+  transform-style: preserve-3d;
+  will-change: transform;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: memory-hover var(--float-time) ease-in-out infinite alternate;
+  animation-delay: var(--float-delay);
+}
+
+.memory-object:nth-child(3n) {
+  animation-direction: alternate-reverse;
+}
+
+@keyframes memory-hover {
+  from {
+    margin-top: -5px;
+  }
+  to {
+    margin-top: 9px;
+  }
+}
+
+.memory-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 7px 7px 23px;
+  border: 1px solid rgba(255, 255, 255, .72);
+  border-radius: 4px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, .98), rgba(232, 218, 243, .94));
+  box-shadow:
+    0 24px 65px rgba(0, 0, 0, .5),
+    0 0 25px rgba(239, 190, 241, .16),
+    inset 0 0 0 1px rgba(255, 255, 255, .4);
+  transform: translateZ(0);
+  transition:
+    box-shadow .35s ease,
+    filter .35s ease,
+    transform .35s ease;
+}
+
+.memory-object:active .memory-frame {
+  transform: scale(1.035);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .65),
+    0 0 40px rgba(239, 190, 241, .4);
+}
+
+.memory-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #241a32;
+  filter: saturate(.92) contrast(1.02);
+  pointer-events: none;
+}
+
+.frame-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  color: #80668d;
+  text-align: center;
+  font: 9px/1 Arial, sans-serif;
+  letter-spacing: .18em;
+}
+
+.memory-glow {
+  position: absolute;
+  inset: -15%;
+  z-index: -1;
+  border-radius: 50%;
+  background: rgba(212, 160, 234, .2);
+  filter: blur(25px);
+  opacity: .65;
+}
+
+/* ---------- 08. Tiny orbit accents ---------- */
+.orbit-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f8d9f5;
+  box-shadow: 0 0 12px #f8c7f3, 0 0 30px #b88ce9;
+  pointer-events: none;
+}
+
+.floating-heart {
+  position: absolute;
+  color: rgba(255, 221, 246, .8);
+  font-size: 17px;
+  text-shadow: 0 0 15px rgba(255, 176, 232, .8);
+  pointer-events: none;
+  animation: heart-drift 9s ease-in-out infinite;
+}
+
+@keyframes heart-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(-8deg);
+  }
+  50% {
+    transform: translate3d(12px, -24px, 0) rotate(12deg);
+  }
+}
+
+/* ---------- 09. Opening screen ---------- */
+#opening {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(30px + var(--safe-top)) 25px calc(30px + var(--safe-bottom));
+  text-align: center;
+  background:
+    radial-gradient(ellipse at center, rgba(60, 39, 82, .36), transparent 55%),
+    rgba(6, 5, 14, .35);
+  backdrop-filter: blur(1.5px);
+  transition:
+    opacity 1s ease,
+    visibility 1s ease,
+    transform 1.2s cubic-bezier(.2, .7, .2, 1);
+}
+
+#opening.leaving {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.12);
+  pointer-events: none;
+}
+
+.opening-kicker {
+  margin-bottom: 18px;
+  color: var(--rose);
+  font: 9px Arial, sans-serif;
+  letter-spacing: .36em;
+  text-transform: uppercase;
+}
+
+.opening-title {
+  margin: 0;
+  color: #fff3fb;
+  font-size: clamp(48px, 14vw, 78px);
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: -.07em;
+  text-shadow: 0 0 45px rgba(227, 169, 240, .28);
+}
+
+.opening-title em {
+  color: var(--rose);
+  font-weight: 400;
+}
+
+.opening-copy {
+  max-width: 275px;
+  margin: 22px auto 0;
+  color: #c9bad5;
+  font: 12px/1.8 Arial, sans-serif;
+}
+
+.enter-button {
+  margin-top: 34px;
+  padding: 15px 24px;
+  border: 1px solid rgba(255, 213, 246, .55);
+  border-radius: 40px;
+  color: #25152b;
+  background: linear-gradient(115deg, #f5c3e4, #c2a5ee);
+  box-shadow:
+    0 0 25px rgba(222, 160, 225, .32),
+    0 0 70px rgba(172, 126, 217, .16);
+  font: 10px Arial, sans-serif;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.enter-button:active {
+  transform: scale(.96);
+  box-shadow: 0 0 45px rgba(222, 160, 225, .48);
+}
+
+.opening-foot {
+  position: absolute;
+  bottom: calc(24px + var(--safe-bottom));
+  color: rgba(220, 202, 230, .55);
+  font: 8px Arial, sans-serif;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+/* ---------- 10. Flight HUD ---------- */
+#hud {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease .4s;
+}
+
+#hud.visible {
+  opacity: 1;
+}
+
+.hud-top {
+  position: absolute;
+  top: calc(17px + var(--safe-top));
+  left: 18px;
+  right: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(240, 224, 246, .72);
+  font: 8px Arial, sans-serif;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.hud-mark {
+  color: var(--rose);
+}
+
+.hud-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(25px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  text-align: center;
+  color: rgba(227, 211, 235, .72);
+  font: 8px Arial, sans-serif;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.hud-bottom strong {
+  color: #f6d9f0;
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: .24em;
+}
+
+.hud-line {
+  width: 38px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e9b7e8, transparent);
+}
+
+/* ---------- 11. Navigation controls ---------- */
+#controls {
+  position: absolute;
+  z-index: 24;
+  right: 17px;
+  bottom: calc(82px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .8s ease .6s;
+}
+
+#controls.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.round-control {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 230, 255, .24);
+  border-radius: 50%;
+  color: #fce9fa;
+  background: rgba(23, 15, 39, .52);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, .2);
+  font-size: 17px;
+  cursor: pointer;
+}
+
+/* ---------- 12. Cinematic memory experience ---------- */
+#photo-viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(34px + var(--safe-top)) 20px calc(46px + var(--safe-bottom));
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(113, 72, 143, .36), transparent 54%),
+    rgba(5, 4, 13, .92);
+  backdrop-filter: blur(0);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .42s ease, visibility .42s ease, backdrop-filter .5s ease;
+}
+
+#photo-viewer.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  backdrop-filter: blur(22px);
+}
+
+.viewer-stars {
+  position: absolute;
+  inset: -30%;
+  pointer-events: none;
+  opacity: .48;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, #fff 99%, transparent),
+    radial-gradient(2px 2px at 73% 18%, #f8d9ff 99%, transparent),
+    radial-gradient(1px 1px at 82% 71%, #fff 99%, transparent),
+    radial-gradient(1px 1px at 28% 82%, #fff 99%, transparent),
+    radial-gradient(2px 2px at 52% 52%, #e7c4ff 99%, transparent);
+  background-size: 190px 210px;
+  animation: viewer-stars-drift 45s linear infinite;
+}
+
+@keyframes viewer-stars-drift {
+  to { transform: translate3d(-45px, 35px, 0) rotate(4deg); }
+}
+
+.viewer-content {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(25px) scale(.96);
+  opacity: 0;
+  transition: transform .55s cubic-bezier(.18,.8,.25,1), opacity .45s ease;
+}
+
+#photo-viewer.open .viewer-content {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.viewer-overline {
+  margin-bottom: 16px;
+  color: #f2b5df;
+  font: 9px Arial, sans-serif;
+  letter-spacing: .32em;
+  text-align: center;
+}
+
+.viewer-card {
+  position: relative;
+  width: min(74vw, 340px);
+  padding: 9px 9px 34px;
+  border: 1px solid rgba(255,255,255,.8);
+  border-radius: 5px;
+  background: linear-gradient(145deg, #fffaff, #e9d9ee);
+  box-shadow:
+    0 35px 100px rgba(0,0,0,.7),
+    0 0 45px rgba(232,174,239,.23);
+  transform: rotate(-1.2deg);
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+
+.viewer-card.changing {
+  transform: rotate(1.2deg) scale(.97);
+}
+
+.viewer-photo-wrap {
+  position: relative;
+  overflow: hidden;
+  background: #21182b;
+}
+
+#viewer-image {
+  display: block;
+  width: 100%;
+  max-height: min(48vh, 470px);
+  min-height: 180px;
+  object-fit: contain;
+  background: #21182b;
+  transition: opacity .22s ease, transform .6s ease;
+}
+
+#photo-viewer.open #viewer-image {
+  animation: image-arrive .7s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes image-arrive {
+  from { opacity: .55; transform: scale(1.045); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.photo-shine {
+  position: absolute;
+  inset: -100% -40%;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.22) 48%, transparent 58%);
+  transform: translateX(-80%) rotate(8deg);
+}
+
+#photo-viewer.open .photo-shine {
+  animation: photo-shine 1.25s .25s ease-out both;
+}
+
+@keyframes photo-shine {
+  to { transform: translateX(80%) rotate(8deg); }
+}
+
+.viewer-caption {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  color: #846b8c;
+  text-align: center;
+  font: 9px Arial, sans-serif;
+  letter-spacing: .2em;
+}
+
+.viewer-message {
+  max-width: 310px;
+  min-height: 42px;
+  margin: 20px auto 13px;
+  color: #f8eaf8;
+  text-align: center;
+  font: italic 17px/1.45 Georgia, serif;
+  text-shadow: 0 0 24px rgba(225,171,239,.24);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.viewer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.viewer-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 13px;
+  border: 1px solid rgba(255,225,250,.22);
+  border-radius: 30px;
+  color: #f8e6f6;
+  background: rgba(255,255,255,.07);
+  backdrop-filter: blur(12px);
+  font: 10px Arial, sans-serif;
+  cursor: pointer;
+  transition: background .25s ease, transform .25s ease, border-color .25s ease;
+}
+
+.viewer-action:active {
+  transform: scale(.94);
+}
+
+.viewer-action.active {
+  color: #ffd5ee;
+  border-color: rgba(255,169,222,.65);
+  background: rgba(198,105,166,.22);
+}
+
+.viewer-action span {
+  letter-spacing: .04em;
+}
+
+.viewer-counter {
+  margin-top: 16px;
+  color: rgba(222,203,233,.62);
+  font: 8px Arial, sans-serif;
+  letter-spacing: .28em;
+}
+
+.viewer-close {
+  position: absolute;
+  z-index: 5;
+  top: calc(17px + var(--safe-top));
+  right: 18px;
+  width: 39px;
+  height: 39px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 50%;
+  color: white;
+  background: rgba(255,255,255,.08);
+  font-size: 23px;
+  cursor: pointer;
+}
+
+.viewer-nav {
+  position: absolute;
+  z-index: 4;
+  top: 47%;
+  display: grid;
+  width: 39px;
+  height: 39px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(255,255,255,.08);
+  font: 26px Georgia, serif;
+  cursor: pointer;
+}
+
+.viewer-prev { left: 12px; }
+.viewer-next { right: 12px; }
+
+.viewer-hint {
+  position: absolute;
+  bottom: calc(13px + var(--safe-bottom));
+  color: rgba(221,204,232,.45);
+  font: 8px Arial, sans-serif;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.memory-burst {
+  position: absolute;
+  z-index: 70;
+  left: var(--x);
+  top: var(--y);
+  color: #ffd8f2;
+  font-size: var(--size);
+  pointer-events: none;
+  text-shadow: 0 0 12px #f4b9e9;
+  animation: burst-away 1s ease-out forwards;
+}
+
+@keyframes burst-away {
+  from { opacity: 1; transform: translate(-50%,-50%) scale(.5) rotate(0); }
+  to { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.6) rotate(35deg); }
+}
+
+/* ---------- 13. Photo adding panel ---------- */
+#add-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(24px + var(--safe-bottom));
+  z-index: 28;
+  display: none;
+  width: min(88vw, 340px);
+  padding: 17px;
+  border: 1px solid rgba(255, 230, 255, .2);
+  border-radius: 17px;
+  background: rgba(19, 13, 32, .88);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+  backdrop-filter: blur(18px);
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+#add-panel.open {
+  display: block;
+}
+
+.panel-title {
+  margin: 0 0 8px;
+  color: #ffe9f9;
+  font-size: 19px;
+  font-weight: 400;
+}
+
+.panel-copy {
+  margin: 0 0 14px;
+  color: #c2b2d1;
+  font: 10px/1.6 Arial, sans-serif;
+}
+
+.panel-button {
+  display: inline-block;
+  padding: 11px 17px;
+  border: 1px solid rgba(242, 181, 223, .6);
+  border-radius: 30px;
+  color: #f9e6f5;
+  background: rgba(255, 255, 255, .06);
+  font: 9px Arial, sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+#photo-input {
+  display: none;
+}
+
+/* ---------- 14. Toast ---------- */
+#toast {
+  position: absolute;
+  left: 50%;
+  bottom: calc(26px + var(--safe-bottom));
+  z-index: 80;
+  max-width: 86vw;
+  padding: 12px 18px;
+  border-radius: 30px;
+  color: #28172e;
+  background: #f5d9ef;
+  box-shadow: 0 8px 35px rgba(0, 0, 0, .3);
+  font: 11px Arial, sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 15px);
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- 15. Mobile tuning ---------- */
+@media (max-width: 420px) {
+  .memory-object {
+    width: var(--mobile-width, 112px);
+    height: var(--mobile-height, 148px);
+  }
+
+  .hud-top {
+    left: 14px;
+    right: 14px;
+    font-size: 7px;
+  }
+
+  #controls {
+    right: 12px;
+  }
+}
+
+/* ---------- 16. Landscape and larger screens ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  .opening-title {
+    font-size: 45px;
+  }
+
+  .opening-copy {
+    margin-top: 10px;
+  }
+
+  .enter-button {
+    margin-top: 16px;
+  }
+
+  .opening-foot {
+    display: none;
+  }
+}
+
+/* ---------- 17. Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<div id="universe">
+  <div class="star-layer" id="stars-far"></div>
+  <div class="star-layer" id="stars-near"></div>
+  <div class="dust-field" id="dust-field"></div>
+
+  <div id="flight-plane">
+    <div class="depth-haze haze-one"></div>
+    <div class="depth-haze haze-two"></div>
+    <div id="memory-field"></div>
+    <div id="decorations"></div>
+  </div>
+
+  <div id="opening">
+    <div class="opening-kicker">uma viagem por tudo que é nosso</div>
+    <h1 class="opening-title">bubu <em>&</em><br>dudu</h1>
+    <p class="opening-copy">
+      Imagine que o mundo ficou em silêncio.
+      Agora vem flutuar um pouquinho pelas nossas lembranças.
+    </p>
+    <button class="enter-button" id="start-flight">começar a viagem&nbsp; ✦</button>
+    <div class="opening-foot">feito especialmente para você · toque para entrar</div>
+  </div>
+
+  <div id="hud">
+    <div class="hud-top">
+      <span>bubu <span class="hud-mark">♡</span> dudu</span>
+      <span>nosso universo particular</span>
+    </div>
+    <div class="hud-bottom">
+      <span class="hud-line"></span>
+      <strong>flutue entre nossas lembranças</strong>
+      <span>arraste o dedo para explorar</span>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="round-control" id="recenter" aria-label="Centralizar universo">◎</button>
+    <button class="round-control" id="add-photos" aria-label="Adicionar fotos">＋</button>
+    <button class="round-control" id="pause-motion" aria-label="Pausar movimento">Ⅱ</button>
+  </div>
+
+  <div id="add-panel">
+    <h2 class="panel-title">Mais lembranças</h2>
+    <p class="panel-copy">
+      Escolha fotos para fazerem parte desta viagem.
+      Elas ficam salvas neste navegador e aparelho.
+    </p>
+    <label class="panel-button" for="photo-input">escolher fotos</label>
+    <input id="photo-input" type="file" accept="image/*" multiple>
+  </div>
+
+  <div id="photo-viewer" aria-modal="true" role="dialog" aria-label="Uma lembrança de vocês">
+    <div class="viewer-stars" aria-hidden="true"></div>
+    <button class="viewer-close" id="close-viewer" aria-label="Fechar foto">×</button>
+    <button class="viewer-nav viewer-prev" id="viewer-prev" aria-label="Foto anterior">‹</button>
+    <div class="viewer-content">
+      <div class="viewer-overline">UM INSTANTE SÓ NOSSO</div>
+      <div class="viewer-card">
+        <div class="viewer-photo-wrap">
+          <img id="viewer-image" alt="Uma lembrança de vocês">
+          <div class="photo-shine"></div>
+        </div>
+        <div class="viewer-caption" id="viewer-caption">UM PEDACINHO DO NOSSO UNIVERSO ♡</div>
+      </div>
+      <div class="viewer-message" id="viewer-message">Tem momentos que merecem morar para sempre.</div>
+      <div class="viewer-actions">
+        <button class="viewer-action" id="memory-heart" aria-label="Marcar como favorita">♡ <span>guardar no coração</span></button>
+        <button class="viewer-action" id="memory-note" aria-label="Mostrar uma mensagem surpresa">✧ <span>surpresinha</span></button>
+      </div>
+      <div class="viewer-counter" id="viewer-counter">01 / 06</div>
+    </div>
+    <button class="viewer-nav viewer-next" id="viewer-next" aria-label="Próxima foto">›</button>
+    <div class="viewer-hint">deslize para ver outras lembranças</div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+/* =========================================================
+   01. DATA — local starter photos
+   Add permanent public photos to /fotos and list them here.
+   ========================================================= */
+const starterPhotos = [
+  "fotos/foto-01.jpg",
+  "fotos/foto-02.jpg",
+  "fotos/foto-03.jpg",
+  "fotos/foto-04.jpg",
+  "fotos/foto-05.jpg",
+  "fotos/foto-06.jpg",
+  "fotos/1.jpeg",
+  "fotos/4.jpeg",
+  "fotos/23.jpeg",
+  "fotos/55.jpeg",
+  "fotos/555.jpeg",
+  "fotos/524242.jpeg",
+  "fotos/dfd.jpeg",
+  "fotos/e.jpeg",
+  "fotos/WhatsApp Image 2026-11-12 at 22.19.01.jpeg",
+  "fotos/WhatsApp Image 2026-11-12 at 22.19.02 copy.jpeg",
+  "fotos/WhatsApp Image 2026-11-12 at 22.19.023 copy.jpeg",
+  "fotos/WhatsApp Image 2026-11-12 at 22.19.023.jpeg"
+];
+
+/* =========================================================
+   02. DOM references
+   ========================================================= */
+const universe = document.getElementById("universe");
+const flightPlane = document.getElementById("flight-plane");
+const memoryField = document.getElementById("memory-field");
+const starsFar = document.getElementById("stars-far");
+const starsNear = document.getElementById("stars-near");
+const dustField = document.getElementById("dust-field");
+const decorations = document.getElementById("decorations");
+const opening = document.getElementById("opening");
+const hud = document.getElementById("hud");
+const controls = document.getElementById("controls");
+const viewer = document.getElementById("photo-viewer");
+const viewerImage = document.getElementById("viewer-image");
+const addPanel = document.getElementById("add-panel");
+const photoInput = document.getElementById("photo-input");
+const toastNode = document.getElementById("toast");
+
+/* =========================================================
+   03. Runtime state
+   ========================================================= */
+let photos = [...starterPhotos];
+let extraPhotoUrls = [];
+let objects = [];
+let animationFrame = 0;
+let lastFrameTime = 0;
+let elapsed = 0;
+let isFlying = false;
+let isPaused = false;
+let isDragging = false;
+let pointerStartX = 0;
+let pointerStartY = 0;
+let rotationX = 0;
+let rotationY = 0;
+let targetRotationX = 0;
+let targetRotationY = 0;
+let driftX = 0;
+let driftY = 0;
+let targetDriftX = 0;
+let targetDriftY = 0;
+let lastPointerTime = 0;
+let toastTimer = null;
+
+/* =========================================================
+   04. Utility helpers
+   ========================================================= */
+function random(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function showToast(message) {
+  toastNode.textContent = message;
+  toastNode.classList.add("show");
+
+  clearTimeout(toastTimer);
+
+  toastTimer = setTimeout(() => {
+    toastNode.classList.remove("show");
+  }, 2400);
+}
+
+function isSmallScreen() {
+  return window.matchMedia("(max-width: 420px)").matches;
+}
+
+/* =========================================================
+   05. Build the distant starfield
+   ========================================================= */
+function createStars(container, amount, sizeMin, sizeMax, opacityMin, opacityMax) {
+  container.innerHTML = "";
+
+  for (let index = 0; index < amount; index += 1) {
+    const star = document.createElement("i");
+    const size = random(sizeMin, sizeMax);
+
+    star.className = "star";
+
+    if (size > 2.1) {
+      star.classList.add("large");
+    }
+
+    star.style.setProperty("--x", `${random(0, 100)}%`);
+    star.style.setProperty("--y", `${random(0, 100)}%`);
+    star.style.setProperty("--size", `${size}px`);
+    star.style.setProperty("--opacity", random(opacityMin, opacityMax));
+    star.style.setProperty("--duration", `${random(2.4, 7)}s`);
+    star.style.setProperty("--delay", `${random(-7, 0)}s`);
+
+    container.appendChild(star);
+  }
+}
+
+/* =========================================================
+   06. Build floating dust particles
+   ========================================================= */
+function createDust(amount) {
+  dustField.innerHTML = "";
+
+  for (let index = 0; index < amount; index += 1) {
+    const particle = document.createElement("i");
+
+    particle.className = "dust";
+    particle.style.setProperty("--left", `${random(0, 100)}%`);
+    particle.style.setProperty("--diameter", `${random(1, 3.5)}px`);
+    particle.style.setProperty("--time", `${random(12, 28)}s`);
+    particle.style.setProperty("--wait", `${random(-25, 0)}s`);
+    particle.style.setProperty("--drift", `${random(-65, 65)}px`);
+
+    dustField.appendChild(particle);
+  }
+}
+
+/* =========================================================
+   07. Small floating decorations
+   ========================================================= */
+function createDecorations() {
+  decorations.innerHTML = "";
+
+  const symbols = ["♡", "✦", "·", "✧", "⋆", "♡"];
+
+  for (let index = 0; index < 15; index += 1) {
+    const decoration = document.createElement("span");
+
+    decoration.className = "floating-heart";
+    decoration.textContent = symbols[index % symbols.length];
+    decoration.style.left = `${random(5, 95)}%`;
+    decoration.style.top = `${random(8, 92)}%`;
+    decoration.style.fontSize = `${random(9, 19)}px`;
+    decoration.style.animationDelay = `${random(-9, 0)}s`;
+    decoration.style.animationDuration = `${random(7, 14)}s`;
+
+    decorations.appendChild(decoration);
+  }
+}
+
+/* =========================================================
+   08. Calculate a 3D arrangement for each memory
+   ========================================================= */
+function getObjectLayout(index, total) {
+  const angle = (Math.PI * 2 * index) / Math.max(total, 1);
+  const spread = isSmallScreen() ? 1 : 1.18;
+  const radiusX = Math.min(window.innerWidth * 0.43, 190) * spread;
+  const radiusY = Math.min(window.innerHeight * 0.36, 280);
+  const depth = random(-240, 230);
+
+  const x = Math.cos(angle) * radiusX + random(-40, 40);
+  const y = Math.sin(angle) * radiusY + random(-70, 70);
+
+  return {
+    x,
+    y,
+    z: depth,
+    rotate: random(-13, 13),
+    width: random(112, 145),
+    height: random(148, 190),
+    speed: random(0.5, 1.15),
+    phase: random(0, Math.PI * 2)
+  };
+}
+
+/* =========================================================
+   09. Create one floating photograph
+   ========================================================= */
+function createMemoryObject(src, index, total) {
+  const layout = getObjectLayout(index, total);
+  const object = document.createElement("button");
+  const glow = document.createElement("span");
+  const frame = document.createElement("span");
+  const image = document.createElement("img");
+  const caption = document.createElement("span");
+
+  object.type = "button";
+  object.className = "memory-object";
+  object.setAttribute("aria-label", `Abrir lembrança ${index + 1}`);
+
+  object.style.setProperty("--width", `${layout.width}px`);
+  object.style.setProperty("--height", `${layout.height}px`);
+  object.style.setProperty("--mobile-width", `${layout.width}px`);
+  object.style.setProperty("--mobile-height", `${layout.height}px`);
+  object.style.setProperty("--float-time", `${random(4.5, 8)}s`);
+  object.style.setProperty("--float-delay", `${random(-7, 0)}s`);
+
+  glow.className = "memory-glow";
+  frame.className = "memory-frame";
+  image.src = src;
+  image.alt = `Foto ${index + 1} de vocês`;
+  image.draggable = false;
+  caption.className = "frame-caption";
+  caption.textContent = "♡";
+
+  frame.appendChild(image);
+  frame.appendChild(caption);
+  object.appendChild(glow);
+  object.appendChild(frame);
+
+  object.addEventListener("click", () => {
+    openPhoto(src);
+  });
+
+  return {
+    element: object,
+    image,
+    layout,
+    index
+  };
+}
+
+/* =========================================================
+   10. Place photographs into the 3D world
+   ========================================================= */
+function renderMemories() {
+  memoryField.innerHTML = "";
+  objects = [];
+
+  const total = photos.length;
+
+  photos.forEach((src, index) => {
+    const item = createMemoryObject(src, index, total);
+
+    memoryField.appendChild(item.element);
+    objects.push(item);
+  });
+
+  positionMemories();
+}
+
+/* =========================================================
+   11. Position every floating memory in 3D space
+   ========================================================= */
+function positionMemories() {
+  const total = objects.length;
+
+  objects.forEach((item, index) => {
+    const layout = item.layout;
+    const spread = total > 8 ? 1.25 : 1;
+
+    const x = layout.x * spread;
+    const y = layout.y * spread;
+    const z = layout.z;
+
+    item.element.style.transform =
+      `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) ` +
+      `rotateZ(${layout.rotate}deg)`;
+
+    item.element.style.zIndex = String(Math.round(z + 500));
+  });
+}
+
+/* =========================================================
+   12. Refresh the spatial arrangement on resize
+   ========================================================= */
+function refreshLayout() {
+  objects.forEach((item, index) => {
+    item.layout = getObjectLayout(index, objects.length);
+  });
+
+  positionMemories();
+}
+
+/* =========================================================
+   13. Open a photograph in focus
+   ========================================================= */
+let activePhotoIndex = 0;
+const sweetMessages = [
+  "Tem momentos que merecem morar para sempre. ♡",
+  "Se eu pudesse voltar no tempo, escolheria viver isso de novo.",
+  "Meu detalhe favorito nessa foto é saber que você estava ali.",
+  "O mundo fica mais bonito quando a gente olha na mesma direção.",
+  "Mais uma lembrança para provar que a felicidade mora nos detalhes.",
+  "Queria guardar esse instante num potinho e levar comigo.",
+  "De todas as coincidências, você é a minha favorita.",
+  "Essa foto tem um lugarzinho especial no meu coração."
+];
+
+function renderFocusedPhoto(index, animate = true) {
+  if (photos.length === 0) return;
+
+  activePhotoIndex = (index + photos.length) % photos.length;
+  const src = photos[activePhotoIndex];
+
+  const card = document.querySelector(".viewer-card");
+  if (animate) {
+    card.classList.add("changing");
+    viewerImage.style.opacity = ".2";
+  }
+
+  window.setTimeout(() => {
+    viewerImage.src = src;
+    viewerImage.style.opacity = "1";
+    card.classList.remove("changing");
+  }, animate ? 140 : 0);
+
+  document.getElementById("viewer-counter").textContent =
+    `${String(activePhotoIndex + 1).padStart(2, "0")} / ${String(photos.length).padStart(2, "0")}`;
+
+  document.getElementById("viewer-message").textContent =
+    sweetMessages[activePhotoIndex % sweetMessages.length];
+
+  document.getElementById("viewer-caption").textContent =
+    `LEMBRANÇA ${String(activePhotoIndex + 1).padStart(2, "0")} · ♡`;
+
+  const heart = document.getElementById("memory-heart");
+  heart.classList.toggle("active", favoritePhotos.has(src));
+  heart.innerHTML = favoritePhotos.has(src)
+    ? "♥ <span>guardado no coração</span>"
+    : "♡ <span>guardar no coração</span>";
+}
+
+function createHeartBurst() {
+  const symbols = ["♡", "✦", "✧", "♥", "·", "⋆"];
+  const rect = document.querySelector(".viewer-card").getBoundingClientRect();
+
+  for (let index = 0; index < 18; index += 1) {
+    const particle = document.createElement("span");
+    particle.className = "memory-burst";
+    particle.textContent = symbols[index % symbols.length];
+    particle.style.setProperty("--x", `${rect.left + rect.width / 2}px`);
+    particle.style.setProperty("--y", `${rect.top + rect.height / 2}px`);
+    particle.style.setProperty("--dx", `${random(-150, 150)}px`);
+    particle.style.setProperty("--dy", `${random(-190, 90)}px`);
+    particle.style.setProperty("--size", `${random(10, 22)}px`);
+    universe.appendChild(particle);
+    particle.addEventListener("animationend", () => particle.remove(), { once: true });
+  }
+}
+
+function openPhoto(src) {
+  const index = photos.indexOf(src);
+  renderFocusedPhoto(index >= 0 ? index : 0, false);
+  viewer.classList.add("open");
+}
+
+function closePhoto() {
+  viewer.classList.remove("open");
+  setTimeout(() => {
+    if (!viewer.classList.contains("open")) {
+      viewerImage.removeAttribute("src");
+    }
+  }, 450);
+}
+
+function showNextPhoto(direction) {
+  renderFocusedPhoto(activePhotoIndex + direction);
+}
+
+const favoritePhotos = new Set();
+
+/* =========================================================
+   15. IndexedDB storage for locally added photos
+   ========================================================= */
+function openPhotoDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("abuub-dudu-flight-gallery", 1);
+
+    request.onupgradeneeded = () => {
+      const database = request.result;
+
+      if (!database.objectStoreNames.contains("photos")) {
+        database.createObjectStore("photos", {
+          keyPath: "id",
+          autoIncrement: true
+        });
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/* =========================================================
+   16. Restore locally added photos on this device
+   ========================================================= */
+async function restoreExtraPhotos() {
+  try {
+    const database = await openPhotoDatabase();
+    const transaction = database.transaction("photos", "readonly");
+    const request = transaction.objectStore("photos").getAll();
+
+    request.onsuccess = () => {
+      const savedPhotos = request.result || [];
+
+      savedPhotos.forEach((item) => {
+        const localUrl = URL.createObjectURL(item.file);
+
+        extraPhotoUrls.push(localUrl);
+        photos.push(localUrl);
+      });
+
+      if (savedPhotos.length > 0) {
+        renderMemories();
+      }
+    };
+  } catch (error) {
+    console.warn("Não foi possível restaurar fotos locais.", error);
+  }
+}
+
+/* =========================================================
+   17. Save newly selected photos
+   ========================================================= */
+async function saveSelectedPhotos(fileList) {
+  const files = [...fileList].filter((file) => {
+    return file.type.startsWith("image/");
+  });
+
+  if (files.length === 0) {
+    return;
+  }
+
+  try {
+    const database = await openPhotoDatabase();
+    const transaction = database.transaction("photos", "readwrite");
+    const store = transaction.objectStore("photos");
+
+    files.forEach((file) => {
+      store.add({
+        file,
+        name: file.name,
+        addedAt: Date.now()
+      });
+    });
+
+    transaction.oncomplete = () => {
+      files.forEach((file) => {
+        const localUrl = URL.createObjectURL(file);
+
+        extraPhotoUrls.push(localUrl);
+        photos.push(localUrl);
+      });
+
+      renderMemories();
+      addPanel.classList.remove("open");
+      showToast(`${files.length} lembrança(s) entrou/entraram no universo ♡`);
+    };
+
+    transaction.onerror = () => {
+      showToast("Não foi possível guardar essas fotos.");
+    };
+  } catch (error) {
+    showToast("Este navegador não conseguiu salvar as fotos.");
+  }
+}
+
+/* =========================================================
+   18. Pointer and touch interaction
+   ========================================================= */
+function beginFlightGesture(event) {
+  if (!isFlying || viewer.classList.contains("open")) {
+    return;
+  }
+
+  isDragging = true;
+  pointerStartX = event.clientX;
+  pointerStartY = event.clientY;
+  lastPointerTime = performance.now();
+
+  targetRotationY = rotationY;
+  targetRotationX = rotationX;
+
+  universe.setPointerCapture?.(event.pointerId);
+}
+
+function moveFlightGesture(event) {
+  if (!isDragging) {
+    return;
+  }
+
+  const deltaX = event.clientX - pointerStartX;
+  const deltaY = event.clientY - pointerStartY;
+
+  targetRotationY += deltaX * 0.0035;
+  targetRotationX -= deltaY * 0.0025;
+
+  targetRotationX = clamp(targetRotationX, -0.42, 0.42);
+
+  pointerStartX = event.clientX;
+  pointerStartY = event.clientY;
+  lastPointerTime = performance.now();
+}
+
+function endFlightGesture() {
+  isDragging = false;
+}
+
+/* =========================================================
+   19. Smooth flight camera
+   ========================================================= */
+function updateCamera(delta) {
+  const easing = Math.min(delta * 0.0045, 0.12);
+
+  rotationX += (targetRotationX - rotationX) * easing;
+  rotationY += (targetRotationY - rotationY) * easing;
+
+  const tiltX = rotationX * 32;
+  const tiltY = rotationY * 32;
+
+  flightPlane.style.transform =
+    `translate3d(${tiltY}px, ${tiltX}px, 0) ` +
+    `rotateX(${rotationX}rad) rotateY(${rotationY}rad)`;
+}
+
+/* =========================================================
+   20. Subtle independent memory movement
+   ========================================================= */
+function updateMemoryDrift(time) {
+  objects.forEach((item) => {
+    const layout = item.layout;
+    const wave = Math.sin(time * 0.00045 * layout.speed + layout.phase);
+    const waveY = Math.cos(time * 0.00036 * layout.speed + layout.phase);
+
+    const x = layout.x + wave * 8;
+    const y = layout.y + waveY * 11;
+
+    item.element.style.transform =
+      `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${layout.z}px) ` +
+      `rotateZ(${layout.rotate + wave * 1.3}deg)`;
+  });
+}
+
+/* =========================================================
+   21. Parallax star layers
+   ========================================================= */
+function updateParallax() {
+  const farX = rotationY * -18;
+  const farY = rotationX * -14;
+  const nearX = rotationY * -38;
+  const nearY = rotationX * -28;
+
+  starsFar.style.transform =
+    `translate3d(${farX}px, ${farY}px, -100px) scale(1.08)`;
+
+  starsNear.style.transform =
+    `translate3d(${nearX}px, ${nearY}px, 20px)`;
+}
+
+/* =========================================================
+   22. Main animation loop
+   ========================================================= */
+function animate(timestamp) {
+  if (!lastFrameTime) {
+    lastFrameTime = timestamp;
+  }
+
+  const delta = timestamp - lastFrameTime;
+  lastFrameTime = timestamp;
+  elapsed += delta;
+
+  if (!isPaused && isFlying) {
+    if (!isDragging) {
+      targetRotationY += delta * 0.000012;
+      targetDriftX = Math.sin(timestamp * 0.00013) * 5;
+      targetDriftY = Math.cos(timestamp * 0.00011) * 7;
+    }
+
+    updateCamera(delta);
+    updateMemoryDrift(timestamp);
+    updateParallax();
+  }
+
+  animationFrame = requestAnimationFrame(animate);
+}
+
+/* =========================================================
+   23. Start the immersive experience
+   ========================================================= */
+function startFlight() {
+  if (isFlying) {
+    return;
+  }
+
+  isFlying = true;
+  opening.classList.add("leaving");
+  hud.classList.add("visible");
+  controls.classList.add("visible");
+
+  showToast("agora é só flutuar por aqui ♡");
+
+  if (!animationFrame) {
+    animationFrame = requestAnimationFrame(animate);
+  }
+}
+
+/* =========================================================
+   24. Recenter the camera
+   ========================================================= */
+function recenterUniverse() {
+  targetRotationX = 0;
+  targetRotationY = 0;
+  rotationX = 0;
+  rotationY = 0;
+
+  showToast("voltando para o nosso cantinho ♡");
+}
+
+/* =========================================================
+   25. Pause and resume ambient movement
+   ========================================================= */
+function toggleMotion() {
+  isPaused = !isPaused;
+
+  const button = document.getElementById("pause-motion");
+
+  button.textContent = isPaused ? "▶" : "Ⅱ";
+  button.setAttribute(
+    "aria-label",
+    isPaused ? "Retomar movimento" : "Pausar movimento"
+  );
+
+  showToast(isPaused ? "universo em pausa" : "viagem retomada ✦");
+}
+
+/* =========================================================
+   26. Add photo panel controls
+   ========================================================= */
+function toggleAddPanel() {
+  addPanel.classList.toggle("open");
+}
+
+/* =========================================================
+   27. Event bindings
+   ========================================================= */
+document.getElementById("start-flight").addEventListener("click", startFlight);
+
+document.getElementById("recenter").addEventListener("click", recenterUniverse);
+
+document.getElementById("pause-motion").addEventListener("click", toggleMotion);
+
+document.getElementById("add-photos").addEventListener("click", toggleAddPanel);
+
+document.getElementById("close-viewer").addEventListener("click", closePhoto);
+document.getElementById("viewer-prev").addEventListener("click", () => showNextPhoto(-1));
+document.getElementById("viewer-next").addEventListener("click", () => showNextPhoto(1));
+
+document.getElementById("memory-heart").addEventListener("click", () => {
+  const src = photos[activePhotoIndex];
+  if (favoritePhotos.has(src)) {
+    favoritePhotos.delete(src);
+    showToast("tiramos dos favoritos ♡");
+  } else {
+    favoritePhotos.add(src);
+    createHeartBurst();
+    showToast("essa lembrança foi guardada no coração ♥");
+  }
+  renderFocusedPhoto(activePhotoIndex, false);
+});
+
+document.getElementById("memory-note").addEventListener("click", () => {
+  const message = document.getElementById("viewer-message");
+  const current = message.textContent;
+  const options = sweetMessages.filter((item) => item !== current);
+  message.style.opacity = "0";
+  message.style.transform = "translateY(5px)";
+  setTimeout(() => {
+    message.textContent = options[Math.floor(Math.random() * options.length)];
+    message.style.opacity = "1";
+    message.style.transform = "translateY(0)";
+  }, 180);
+  createHeartBurst();
+});
+
+viewer.addEventListener("click", (event) => {
+  if (event.target === viewer || event.target.classList.contains("viewer-stars")) {
+    closePhoto();
+  }
+});
+
+let viewerTouchStartX = 0;
+viewer.addEventListener("touchstart", (event) => {
+  viewerTouchStartX = event.changedTouches[0].clientX;
+}, { passive: true });
+
+viewer.addEventListener("touchend", (event) => {
+  const delta = event.changedTouches[0].clientX - viewerTouchStartX;
+  if (Math.abs(delta) > 55) {
+    showNextPhoto(delta < 0 ? 1 : -1);
+  }
+}, { passive: true });
+
+photoInput.addEventListener("change", async (event) => {
+  await saveSelectedPhotos(event.target.files);
+  event.target.value = "";
+});
+
+universe.addEventListener("pointerdown", beginFlightGesture);
+universe.addEventListener("pointermove", moveFlightGesture);
+universe.addEventListener("pointerup", endFlightGesture);
+universe.addEventListener("pointercancel", endFlightGesture);
+window.addEventListener("resize", refreshLayout);
+
+/* =========================================================
+   28. Keyboard support for desktop
+   ========================================================= */
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closePhoto();
+    addPanel.classList.remove("open");
+  }
+
+  if (viewer.classList.contains("open") && event.key === "ArrowRight") {
+    showNextPhoto(1);
+  }
+
+  if (viewer.classList.contains("open") && event.key === "ArrowLeft") {
+    showNextPhoto(-1);
+  }
+
+  if (event.key === " " && !isFlying) {
+    startFlight();
+  }
+
+  if (event.key === "ArrowLeft") {
+    targetRotationY -= 0.12;
+  }
+
+  if (event.key === "ArrowRight") {
+    targetRotationY += 0.12;
+  }
+
+  if (event.key === "ArrowUp") {
+    targetRotationX = clamp(targetRotationX - 0.08, -0.42, 0.42);
+  }
+
+  if (event.key === "ArrowDown") {
+    targetRotationX = clamp(targetRotationX + 0.08, -0.42, 0.42);
+  }
+});
+
+/* =========================================================
+   29. Visibility and performance
+   ========================================================= */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    isPaused = true;
+  } else if (isFlying) {
+    isPaused = false;
+  }
+});
+
+/* =========================================================
+   30. Initial scene setup
+   ========================================================= */
+function initializeUniverse() {
+  const mobile = isSmallScreen();
+
+  createStars(starsFar, mobile ? 95 : 150, 0.7, 1.8, .2, .65);
+  createStars(starsNear, mobile ? 48 : 85, 1, 2.8, .35, .9);
+  createDust(mobile ? 35 : 60);
+  createDecorations();
+  renderMemories();
+  restoreExtraPhotos();
+
+  animationFrame = requestAnimationFrame(animate);
+}
+
+initializeUniverse();
+</script>
+</body>
+</html>
