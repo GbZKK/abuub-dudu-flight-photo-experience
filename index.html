@@ -7,7 +7,7 @@
 <title>bubu & dudu — entre as estrelas</title>
 <style>
 /* =========================================================
-   ABUUB & DUDU — FULLSCREEN MEMORY FLIGHT
+   bubu & DUDU — FULLSCREEN MEMORY FLIGHT
    Mobile-first immersive floating photo universe
    ========================================================= */
 
@@ -48,7 +48,7 @@ body {
   font-family: Georgia, "Times New Roman", serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
-  touch-action: pan-y;
+  touch-action: none;
 }
 
 button,
@@ -863,14 +863,17 @@ button {
 /* ---------- 15. Mobile tuning ---------- */
 @media (max-width: 420px) {
   #universe {
-    perspective: none;
+    perspective: 900px;
+    touch-action: none;
   }
 
+  /* Keep the mobile scene transformable: the previous !important rule
+     cancelled every transform written by the animation and drag code. */
   #flight-plane,
   #memory-field {
-    transform: none !important;
-    transform-style: flat;
-    perspective: none;
+    transform-style: preserve-3d;
+    perspective: 900px;
+    will-change: transform;
   }
 
   .memory-object {
@@ -1001,7 +1004,7 @@ button {
 
   <div id="hud">
     <div class="hud-top">
-      <span>abuub <span class="hud-mark">♡</span> dudu</span>
+      <span>bubu <span class="hud-mark">♡</span> dudu</span>
       <span>nosso universo particular</span>
     </div>
     <div class="hud-bottom">
@@ -1066,7 +1069,7 @@ const starterPhotos = [
   "fotos/foto-04.jpg",
   "fotos/foto-05.jpg",
   "fotos/foto-06.jpg",
-"fotos/1.jpeg",
+  "fotos/1.jpeg",
   "fotos/4.jpeg",
   "fotos/23.jpeg",
   "fotos/55.jpeg",
@@ -1556,7 +1559,11 @@ function beginFlightGesture(event) {
   targetRotationY = rotationY;
   targetRotationX = rotationX;
 
-  universe.setPointerCapture?.(event.pointerId);
+  try {
+    event.currentTarget.setPointerCapture(event.pointerId);
+  } catch (_) {
+    // Pointer capture may be unavailable in older mobile browsers.
+  }
 }
 
 function moveFlightGesture(event) {
@@ -1594,8 +1601,11 @@ function updateCamera(delta) {
   const tiltY = rotationY * 32;
 
   if (isSmallScreen()) {
-    // Keep the photo plane still on phones; only the stars get gentle parallax.
-    flightPlane.style.transform = "none";
+    // On phones use a lighter 2D camera move instead of disabling movement.
+    // This keeps dragging responsive without relying on heavy 3D depth.
+    flightPlane.style.transform =
+      `translate3d(${tiltY * 1.35}px, ${tiltX * 1.35}px, 0) ` +
+      `rotateZ(${rotationY * 0.035}rad)`;
   } else {
     flightPlane.style.transform =
       `translate3d(${tiltY}px, ${tiltX}px, 0) ` +
@@ -1728,7 +1738,13 @@ function toggleAddPanel() {
 /* =========================================================
    27. Event bindings
    ========================================================= */
-document.getElementById("start-flight").addEventListener("click", startFlight);
+const startButton = document.getElementById("start-flight");
+startButton.addEventListener("click", startFlight);
+// Pointer activation is reliable on Android Chrome and avoids a touch-only
+// handler firing twice alongside the normal click event.
+startButton.addEventListener("pointerup", (event) => {
+  if (event.pointerType === "touch") startFlight();
+});
 
 document.getElementById("recenter").addEventListener("click", recenterUniverse);
 
@@ -1794,6 +1810,8 @@ universe.addEventListener("pointerdown", beginFlightGesture);
 universe.addEventListener("pointermove", moveFlightGesture);
 universe.addEventListener("pointerup", endFlightGesture);
 universe.addEventListener("pointercancel", endFlightGesture);
+universe.addEventListener("lostpointercapture", endFlightGesture);
+universe.addEventListener("contextmenu", (event) => event.preventDefault());
 window.addEventListener("resize", refreshLayout);
 
 /* =========================================================
