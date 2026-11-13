@@ -879,11 +879,11 @@ button {
   .memory-object {
     width: var(--mobile-width, 112px);
     height: var(--mobile-height, 148px);
-    transform-style: flat;
+    transform-style: preserve-3d;
     animation: none !important;
     -webkit-backface-visibility: visible;
     backface-visibility: visible;
-    contain: layout paint;
+    contain: none;
   }
 
   .memory-frame {
@@ -1228,18 +1228,35 @@ function createDecorations() {
    ========================================================= */
 function getObjectLayout(index, total) {
   const angle = (Math.PI * 2 * index) / Math.max(total, 1);
-  const spread = isSmallScreen() ? 1 : 1.18;
+  const mobile = isSmallScreen();
+
+  if (mobile) {
+    // Fotos distribuídas em um anel 3D: ao girar a câmera, você vê
+    // as lembranças surgindo dos lados e passando ao seu redor.
+    const radius = Math.min(Math.max(window.innerWidth * 0.78, 285), 390);
+    const orbitAngle = angle + random(-0.055, 0.055);
+    return {
+      x: Math.sin(orbitAngle) * radius,
+      y: Math.sin(orbitAngle * 2.1) * 76 + random(-18, 18),
+      z: Math.cos(orbitAngle) * radius,
+      orbitAngle,
+      rotate: random(-5, 5),
+      width: random(108, 128),
+      height: random(142, 168),
+      speed: random(0.55, 1.05),
+      phase: random(0, Math.PI * 2)
+    };
+  }
+
+  const spread = 1.18;
   const radiusX = Math.min(window.innerWidth * 0.43, 190) * spread;
   const radiusY = Math.min(window.innerHeight * 0.36, 280);
   const depth = random(-240, 230);
-
   const x = Math.cos(angle) * radiusX + random(-40, 40);
   const y = Math.sin(angle) * radiusY + random(-70, 70);
 
   return {
-    x,
-    y,
-    z: depth,
+    x, y, z: depth,
     rotate: random(-13, 13),
     width: random(112, 145),
     height: random(148, 190),
@@ -1333,11 +1350,10 @@ function positionMemories() {
     const z = layout.z;
 
     if (isSmallScreen()) {
-      // Mobile: keep cards on a flat 2D plane. This avoids GPU layer
-      // flicker/gray overlays seen on some Android browsers.
       item.element.style.transform =
-        `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${layout.rotate * 0.55}deg)`;
-      item.element.style.zIndex = String(20 + index);
+        `translate3d(calc(-50% + ${layout.x}px), calc(-50% + ${layout.y}px), ${layout.z}px) ` +
+        `rotateY(${layout.orbitAngle}rad) rotateZ(${layout.rotate}deg)`;
+      item.element.style.zIndex = String(Math.round(layout.z + 500));
     } else {
       item.element.style.transform =
         `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) ` +
@@ -1601,11 +1617,10 @@ function updateCamera(delta) {
   const tiltY = rotationY * 32;
 
   if (isSmallScreen()) {
-    // On phones use a lighter 2D camera move instead of disabling movement.
-    // This keeps dragging responsive without relying on heavy 3D depth.
+    // Orbit the whole photo ring around the viewer on mobile.
     flightPlane.style.transform =
-      `translate3d(${tiltY * 1.35}px, ${tiltX * 1.35}px, 0) ` +
-      `rotateZ(${rotationY * 0.035}rad)`;
+      `translate3d(${tiltY * 0.25}px, ${tiltX * 0.25}px, 0) ` +
+      `rotateX(${rotationX}rad) rotateY(${rotationY}rad)`;
   } else {
     flightPlane.style.transform =
       `translate3d(${tiltY}px, ${tiltX}px, 0) ` +
@@ -1627,7 +1642,8 @@ function updateMemoryDrift(time) {
 
     if (isSmallScreen()) {
       item.element.style.transform =
-        `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${(layout.rotate + wave) * 0.55}deg)`;
+        `translate3d(calc(-50% + ${layout.x + wave * 5}px), calc(-50% + ${layout.y + waveY * 7}px), ${layout.z + Math.sin(time * 0.0003 + layout.phase) * 9}px) ` +
+        `rotateY(${layout.orbitAngle}rad) rotateZ(${layout.rotate + wave * 0.7}deg)`;
     } else {
       item.element.style.transform =
         `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${layout.z}px) ` +
@@ -1666,7 +1682,9 @@ function animate(timestamp) {
 
   if (!isPaused && isFlying) {
     if (!isDragging) {
-      targetRotationY += delta * 0.000012;
+      // A câmera passeia lentamente ao redor do anel mesmo sem tocar.
+      targetRotationY += delta * (isSmallScreen() ? 0.000035 : 0.000012);
+      targetRotationX = Math.sin(timestamp * 0.00012) * (isSmallScreen() ? 0.045 : 0.025);
       targetDriftX = Math.sin(timestamp * 0.00013) * 5;
       targetDriftY = Math.cos(timestamp * 0.00011) * 7;
     }
